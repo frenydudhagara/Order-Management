@@ -1,0 +1,19 @@
+# Normalise line endings in the repository to LF.
+#
+# Without this, committing from Windows stores CRLF, and the whole tree shows up
+# as modified when anyone checks it out on macOS or Linux -- including the
+# reviewer, and the Linux container that builds the backend image.
+* text=auto eol=lf
+
+# Shell scripts must keep LF even on Windows: CRLF breaks the shebang line.
+*.sh text eol=lf
+Dockerfile text eol=lf
+
+# Lockfiles are generated; collapse them in diffs and reviews.
+package-lock.json linguist-generated=true -diff
+
+# Never mangle binaries.
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary

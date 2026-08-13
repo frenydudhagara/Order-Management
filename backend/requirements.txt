@@ -1,0 +1,10 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+sqlalchemy==2.0.36
+pydantic==2.10.4
+pydantic-settings==2.7.0
+
+# Postgres driver, used in production. Local development and the test suite
+# run on SQLite, which needs no driver. The binary wheel avoids requiring
+# libpq and a compiler in the container image.
+psycopg[binary]==3.2.3

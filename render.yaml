@@ -1,0 +1,47 @@
+# Render blueprint for the API.
+#
+# Why not Vercel for the backend: Vercel's Python runtime is serverless, which
+# rules out both a long-lived WebSocket and the background task that advances
+# order status. Render (or Railway / Fly.io) runs a normal process, so both work.
+# The frontend still goes to Vercel -- see frontend/vercel.json.
+
+services:
+  - type: web
+    name: forkful-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+
+      # Supabase Postgres connection string, set in the Render dashboard rather
+      # than committed. `sync: false` is what keeps this secret out of the repo.
+      #
+      # Use the SESSION POOLER string from Supabase (Connect -> Session pooler):
+      #   postgres://postgres.<ref>:<pw>@aws-0-<region>.pooler.supabase.com:5432/postgres
+      # The direct connection (db.<ref>.supabase.co) is IPv6-only and Render's
+      # free tier is IPv4-only, so it cannot resolve. Paste it verbatim -- the
+      # app rewrites the `postgres://` prefix to the psycopg driver.
+      #
+      # Not SQLite: free instances restart on idle and on every deploy, and the
+      # container filesystem does not survive that, so orders placed by a
+      # reviewer would silently vanish. A persistent disk would fix it but
+      # requires a paid plan.
+      - key: DATABASE_URL
+        sync: false
+
+      # The deployed frontend origin, e.g. https://forkful.vercel.app
+      # Comma-separated if there is more than one. Set after the first Vercel
+      # deploy; browser requests fail CORS until it matches exactly.
+      - key: CORS_ORIGINS
+        sync: false
+
+      # Seconds an order holds each status before advancing. Longer than the
+      # local default so a reviewer can watch the transitions happen.
+      - key: STATUS_STEP_SECONDS
+        value: "20"

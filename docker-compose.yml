@@ -1,0 +1,26 @@
+# Runs the API in a container with the frontend's dev origin allowed.
+# The frontend stays on `npm run dev` for hot reload.
+
+services:
+  api:
+    build:
+      context: ./backend
+    ports:
+      - '8000:8000'
+    environment:
+      ENVIRONMENT: development
+      DEBUG: 'true'
+      CORS_ORIGINS: 'http://localhost:5173,http://127.0.0.1:5173'
+      STATUS_STEP_SECONDS: '12'
+      DATABASE_URL: 'sqlite:////data/orders.db'
+    volumes:
+      # Named volume so placed orders survive a container restart.
+      - api-data:/data
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  api-data:
